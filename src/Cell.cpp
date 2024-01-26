@@ -1,7 +1,7 @@
 #include <sudokuSolver/Cell.hpp>
 
 namespace sudokuSolver {
-    Cell::Cell() : value(-1), filled(false), options({1, 2, 3, 4, 5, 6, 7, 8, 9}){
+    Cell::Cell() : value(0), filled(false), options({1, 2, 3, 4, 5, 6, 7, 8, 9}){
     }
 
     bool Cell::removeOption(int option) {
@@ -34,6 +34,11 @@ namespace sudokuSolver {
     
     int Cell::getValue() const {
         return value;
+    }
+
+    void Cell::setNotFilled() {
+        filled = false;
+        value = 0;
     }
 
     void Cell::fill(int fillValue) {

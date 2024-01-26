@@ -14,9 +14,8 @@ namespace sudokuSolver {
             bool removeOption(int option);
             void fill(int fillValue);
             int getFirstOption() const;
+            void setNotFilled();
         private:
-          
-
             int value;
             std::vector<int> options;
             bool filled;
