@@ -1,9 +1,13 @@
 #include <sudokuSolver/Solver.hpp>
 #include <iostream>
 #include <fstream>
+#include <algorithm>
 
 namespace sudokuSolver {
+
     Solver::Solver(std::string filePath) {
+        
+        //open the file and save content in vector
         std::ifstream file;
         file.open(filePath);
         std::vector<std::string> lines;
@@ -21,25 +25,27 @@ namespace sudokuSolver {
             }
         } else {
           std::cout<<"Invalid filepath!"<<std::endl;
-          return;  
+          throw ;  
         }
 
+        //fill grid with either a empty cell or a prefilled cell
         for(int r = 0; r < grid.size(); r++) {
             for(int c = 0; c < grid[r].size(); c++) {
                 Cell cell;
-                if(lines[r].at(c) != '0') {
+                if(lines[r].at(c) != '0') { //if cell is prefilled
                     cell.fill(lines[r].at(c) - '0');
                 }
                 grid[r][c] = cell;
             }
         }
 
+        //remove options of cells in row, column or subgrid of prefilled cells
         for(int r = 0; r < grid.size(); r++) {
             for(int c = 0; c < grid[r].size(); c++) {
                 if(grid[r][c].getValue() == 0) {
                     continue;
                 } else {
-                    updateCellOptions(r, c, true);
+                    updateGridOptions(r, c, true);
                 }
             }
         }
@@ -49,24 +55,30 @@ namespace sudokuSolver {
         if(isGridFilled()) {
             return true;
         }
-        std::array<int, 2> cellPosition = findOptimalCell();
+
+        std::array<int, 2> cellPosition = findCellWithFewestOptions();
         Cell& optimalCell =  grid[cellPosition[0]][cellPosition[1]];
-        for(int i = 0; i < optimalCell.getNumberOfOptions(); i++) {
+
+        for(int i = 0; i < optimalCell.getNumberOfOptions(); i++) { //try every possible option until grid is filled
             optimalCell.fill(optimalCell.getFirstOption());
-            updateCellOptions(cellPosition[0], cellPosition[1], true);
-            if(solve()) {
+            updateGridOptions(cellPosition[0], cellPosition[1], true);
+            if(solve()) { //if recursive call returns true, grid is filled
                 return true;
-            } else {
-                updateCellOptions(cellPosition[0], cellPosition[1], false);
+            } else { //else current value is wrong, so reset
+                updateGridOptions(cellPosition[0], cellPosition[1], false);
                 optimalCell.setNotFilled();
             }
         }
         return false; // Sudoku can't be solved
     }
 
-    void Solver::updateCellOptions(int row, int column, bool remove) {
-        //rows and columns
-        for(int i = 0; i < 9; i++) {
+    void Solver::updateGridOptions(int row, int column, bool remove) {
+        if(row < 0 or row > 9 or column < 0 or column > 9) {
+            return;
+        }
+       
+        //row and column
+        for(int i = 0; i < grid.size(); i++) {
             if (remove) {
                 if(i != column) { //skip element itself
                     grid[row][i].removeOption(grid[row][column].getValue());
@@ -84,7 +96,7 @@ namespace sudokuSolver {
             }
         }
                       
-        //subgrids
+        //subgrid
         for(int r = ((row/3)*3); r < (((row/3)*3)+3); r++) {
             for(int c = ((column/3)*3); c < (((column/3)*3)+3); c++) {
                 if(r != row and c != column) {
@@ -99,19 +111,20 @@ namespace sudokuSolver {
 
     }
 
-    std::array<int, 2> Solver::findOptimalCell() {
+    std::array<int, 2> Solver::findCellWithFewestOptions() const{
         int fewestOptions = 10;
-        std::array<int,2> positionOfOptimalCell = {-1, -1};
+        std::array<int,2> positionOfCell = {-1, -1};
+
         for(int r = 0; r < grid.size(); r++) {
             for(int c = 0; c < grid[r].size(); c++) {
-                if(!(grid[r][c].isFilled()) and grid[r][c].getNumberOfOptions() < fewestOptions) {
+                if(!(grid[r][c].isFilled()) and grid[r][c].getNumberOfOptions() < fewestOptions) { //if cell is not filled and has fewer options
                     fewestOptions = grid[r][c].getNumberOfOptions();
-                    positionOfOptimalCell[0] = r;
-                    positionOfOptimalCell[1] = c;
+                    positionOfCell[0] = r;
+                    positionOfCell[1] = c;
                 }
             }
         }
-        return positionOfOptimalCell;
+        return positionOfCell;
     }
 
     bool Solver::isGridFilled() const{
