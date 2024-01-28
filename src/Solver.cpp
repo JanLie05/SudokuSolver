@@ -17,15 +17,13 @@ namespace sudokuSolver {
             int lineNum = 0;
             while(file.good()) {
                 std::getline(file, currentLine);
-                if(lineNum > 9 or currentLine.size() > 9 or !std::all_of(currentLine.begin(), currentLine.end(), [](char c) -> bool { return std::isdigit(c); })) {
-                    std::cout<<"Invalid file!"<<std::endl;
-                    return;
+                if(lineNum > 9 or currentLine.size() != 9 or !std::all_of(currentLine.begin(), currentLine.end(), [](char c) -> bool { return std::isdigit(c); })) {
+                    throw std::invalid_argument("Invalid file"); 
                 }
                 lines.push_back(currentLine);
             }
         } else {
-          std::cout<<"Invalid filepath!"<<std::endl;
-          throw ;  
+            throw std::invalid_argument("Invalid filepath"); 
         }
 
         //fill grid with either a empty cell or a prefilled cell
